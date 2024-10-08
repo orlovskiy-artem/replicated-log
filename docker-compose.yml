@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  master:
+    container_name: master-container
+    build: ./master
+    ports:
+      - "${MASTER_PORT:-8000}:${MASTER_INTERNAL_PORT:-8000}"
+    volumes:
+      - ./master:/app
+    environment:
+      - NUMBER_OF_SECONDARIES=${NUMBER_OF_SECONDARIES}
+      - PROJECT_NAME=${PROJECT_NAME}
+      - SECONDARY_INTERNAL_PORT=${SECONDARY_INTERNAL_PORT}
+      - SECONDARY_SERVICE_NAME=secondary
+    networks:
+      - internal_network
+      
+  secondary:
+    build: ./secondary
+    volumes:
+      - ./secondary:/app
+    ports:
+      - ${SECONDARY_PORTS}:${SECONDARY_INTERNAL_PORT:-8000}
+    deploy:
+      mode: replicated
+      replicas: ${NUMBER_OF_SECONDARIES}
+    depends_on:
+      - master
+    networks:
+      - internal_network
+    
+    
+
+networks:
+  internal_network:
+    driver: bridge

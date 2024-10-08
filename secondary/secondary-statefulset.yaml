@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: secondary-statefulset
+  labels:
+    app: secondary
+spec:
+  serviceName: "secondary-service"
+  replicas: 3  # Adjust this number based on your NUMBER_OF_SECONDARIES
+  selector:
+    matchLabels:
+      app: secondary
+  template:
+    metadata:
+      labels:
+        app: secondary
+    spec:
+      containers:
+        - name: secondary
+          image: secondary:latest  # Make sure this matches your actual image name
+          imagePullPolicy: Never  # For local development, change as needed
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 500m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secondary-service
+spec:
+  selector:
+    app: secondary
+  ports:
+    - port: 8000
+      targetPort: http
+  clusterIP: None

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: master-statefulset
+spec:
+  serviceName: "master"
+  selector:
+    matchLabels:
+      app: master
+  template:
+    metadata:
+      labels:
+        app: master
+    spec:
+      containers:
+        - name: master
+          image: master:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          env:
+            - name: SECONDARY_SERVICE_NAME
+              value: "secondary-service"
+            - name: NUMBER_OF_SECONDARIES
+              value: "3"
+            - name: SECONDARY_PORT
+              value: "8000"
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 1000m
+
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: master
+spec:
+  selector:
+    app: master
+  ports:
+    - port: 8000
+      protocol: TCP
+      targetPort: http
+  clusterIP: None
